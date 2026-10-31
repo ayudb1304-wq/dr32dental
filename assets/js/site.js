@@ -39,9 +39,12 @@
     var ua = navigator.userAgent;
     var appleWebKit = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
     var webm = !appleWebKit && video.canPlayType('video/webm; codecs="vp9"') === "probably";
+    // Safari decodes HEVC in hardware; the phone cut in HEVC is about a sixth of the H.264 size.
+    var hevc = appleWebKit && video.canPlayType('video/mp4; codecs="hvc1"') !== "";
     var inView = false;
     var wanted = function () {
-      return "assets/video/hero-" + (phone.matches ? "mobile" : "desktop") + (webm ? ".webm" : ".mp4");
+      if (!phone.matches) return "assets/video/hero-desktop" + (webm ? ".webm" : ".mp4");
+      return "assets/video/hero-mobile" + (webm ? ".webm" : hevc ? "-hevc.mp4" : ".mp4");
     };
     var useSource = function () {
       var src = wanted();
@@ -80,8 +83,16 @@
         });
       }, { threshold: 0.15 }).observe(video.closest(".hero") || video);
     };
-    if (document.readyState === "complete") start();
-    else window.addEventListener("load", start, { once: true });
+    // Start as soon as the poster frame is on screen, rather than waiting for the whole page to load.
+    var started = false;
+    var begin = function () { if (!started) { started = true; start(); } };
+    var poster = document.querySelector(".hero-poster");
+    if (!poster || (poster.complete && poster.naturalWidth)) begin();
+    else {
+      poster.addEventListener("load", begin, { once: true });
+      poster.addEventListener("error", begin, { once: true });
+      window.addEventListener("load", begin, { once: true });
+    }
   }
 
   if (!gsap) return;
