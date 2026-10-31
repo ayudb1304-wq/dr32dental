@@ -27,31 +27,63 @@
     else window.addEventListener("resize", sizeLine);
   }
 
-  // Hero video. Under reduced motion it never loads: the poster (its first frame) stays.
-  // The cut is chosen by screen size (9:16 phone, 16:9 wider) and swapped if that changes,
-  // e.g. on rotation. It starts after the page has loaded and plays only while the hero is on screen.
+  // Diagnostics: open the page with ?debug=1 to see what this browser reports (for testing on real phones).
+  var debug = /[?&]debug(=|&|$)/.test(location.search);
+  var panel = null;
+  var log = function (msg) {
+    if (!debug) return;
+    if (!panel) {
+      panel = document.createElement("pre");
+      panel.setAttribute("style", "position:fixed;left:8px;right:8px;bottom:88px;z-index:100;max-height:46vh;overflow:auto;margin:0;padding:10px 12px;" +
+        "background:rgba(255,255,255,.96);color:#1A2420;border:1px solid #D9E3DE;border-radius:12px;font:11px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap");
+      document.body.appendChild(panel);
+    }
+    panel.textContent += msg + "\n";
+  };
+  if (debug) {
+    window.addEventListener("error", function (e) { log("JS error: " + e.message); });
+    var scriptTag = document.querySelector('script[src*="site.js"]');
+    log("script: " + (scriptTag ? scriptTag.getAttribute("src") : "?"));
+    log("reduce motion: " + reduce + "  |  gsap: " + !!gsap + "  |  ScrollTrigger: " + !!window.ScrollTrigger);
+    log("viewport: " + innerWidth + "x" + innerHeight + "  |  " + navigator.userAgent);
+  }
+
+  // Hero video. It plays on its own unless the visitor has asked for reduced motion; then the poster
+  // (the first frame) stays and nothing is downloaded until they press play. The cut is chosen by screen
+  // size (9:16 phone, 16:9 wider) and swapped if that changes, e.g. on rotation. It starts after the page
+  // has loaded, plays only while the hero is on screen, and the button pauses or plays it at any time.
   var video = document.querySelector(".hero-video");
-  if (video && !reduce && "IntersectionObserver" in window) {
+  var toggle = document.querySelector(".hero-toggle");
+  if (video && "IntersectionObserver" in window) {
     var phone = window.matchMedia("(max-width: 759px)");
     var ua = navigator.userAgent;
     var appleWebKit = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
     var webm = !appleWebKit && video.canPlayType('video/webm; codecs="vp9"') === "probably";
     var inView = false;
+    var userPaused = false;   // pressed pause
+    var userPlayed = false;   // pressed play (lets reduced-motion visitors opt in)
+    var allowed = function () { return !userPaused && (!reduce || userPlayed); };
     var wanted = function () {
       return "assets/video/hero-" + (phone.matches ? "mobile" : "desktop") + (webm ? ".webm" : ".mp4");
     };
-    // If the browser refuses autoplay (iPhone Low Power Mode, data saver), the poster stays,
-    // and the first tap anywhere on the page starts the video.
+    var setToggle = function (playing) {
+      if (!toggle) return;
+      toggle.dataset.state = playing ? "playing" : "paused";
+      toggle.setAttribute("aria-label", playing ? "Pause background video" : "Play background video");
+    };
+    // If the browser refuses autoplay (iPhone Low Power Mode, data saver), the first tap anywhere starts it.
     var waitingForTap = false;
     var onTap = function () {
       waitingForTap = false;
       document.removeEventListener("pointerdown", onTap);
       document.removeEventListener("touchend", onTap);
-      if (inView) play();
+      if (inView && allowed()) play();
     };
     var play = function () {
+      useSource();
       var p = video.play();
-      if (p && p.catch) p.catch(function () {
+      if (p && p.catch) p.catch(function (err) {
+        log("play() refused: " + (err && err.name) + " " + (err && err.message));
         if (waitingForTap) return;
         waitingForTap = true;
         document.addEventListener("pointerdown", onTap, { passive: true });
@@ -61,27 +93,39 @@
     var useSource = function () {
       var src = wanted();
       if (video.getAttribute("src") === src) return;
+      log("video src: " + src);
       video.classList.remove("is-playing");
       video.setAttribute("src", src);
-      if (inView) play();
     };
-    video.addEventListener("playing", function () { video.classList.add("is-playing"); });
+    video.addEventListener("playing", function () { video.classList.add("is-playing"); setToggle(true); log("video: playing"); });
+    video.addEventListener("pause", function () { setToggle(false); });
+    video.addEventListener("error", function () { log("video error code: " + (video.error && video.error.code)); });
+    if (toggle) {
+      toggle.hidden = false;
+      setToggle(false);
+      toggle.addEventListener("click", function () {
+        if (!video.paused) { userPaused = true; video.pause(); }
+        else { userPaused = false; userPlayed = true; play(); }
+      });
+    }
     var start = function () {
-      useSource();
-      if (phone.addEventListener) phone.addEventListener("change", useSource);
-      else if (phone.addListener) phone.addListener(useSource);
+      if (allowed()) useSource();
+      var swap = function () { if (video.getAttribute("src")) { useSource(); if (inView && allowed()) play(); } };
+      if (phone.addEventListener) phone.addEventListener("change", swap);
+      else if (phone.addListener) phone.addListener(swap);
       new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           inView = entry.isIntersecting;
-          if (inView) play(); else video.pause();
+          if (inView && allowed()) play(); else if (!inView) video.pause();
         });
       }, { threshold: 0.15 }).observe(video.closest(".hero") || video);
+      if (reduce) log("video: not autoplaying because reduce motion is on (press play to start)");
     };
     if (document.readyState === "complete") start();
     else window.addEventListener("load", start, { once: true });
   }
 
-  if (!gsap || reduce) return;
+  if (!gsap || reduce) { log("scroll transition: off (" + (reduce ? "reduce motion is on" : "GSAP missing") + ")"); return; }
 
   // Page-load: the hero text settles in.
   gsap.from(".hero .reveal", { y: 22, opacity: 0, duration: 0.8, stagger: 0.09, ease: "power3.out" });
@@ -100,6 +144,7 @@
         invalidateOnRefresh: true
       };
       window.ScrollTrigger.create(Object.assign({ pin: true, pinSpacing: false }, range));
+      log("scroll transition: on");
       // As it is covered, the hero turns translucent: text lifts away, the media fades and drifts at most 40px.
       gsap.timeline({ scrollTrigger: Object.assign({ scrub: true }, range) })
         .to(".hero-text", { opacity: 0, y: -48, ease: "none" }, 0)
