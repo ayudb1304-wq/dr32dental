@@ -4,6 +4,7 @@ One-page preview site for Dr. Apoorva's clinic in Horamavu Agara, Bengaluru. Bui
 
 - Live: https://dr32dental.vercel.app. Every push to `main` redeploys on Vercel automatically.
 - Plain HTML/CSS/JS with no build step. `index.html` is the page. `assets/js/site.js` runs the motion (GSAP 3.12.5 and ScrollTrigger, self-hosted): the hero video plays only while on screen, drifts at most 40px with scroll, and stays a still poster under reduced motion.
+- Vercel Web Analytics is on (enabled in the dashboard on 31 Oct 2026). The tag near the end of `index.html` loads `/_vercel/insights/script.js`, an absolute Vercel route that only exists on deployments, so it is skipped on localhost. No npm package: the site has no build step.
 - Hero video lives in `assets/video` (16:9 desktop, 9:16 phone; no audio). Phones get HEVC on Safari (148 KB), VP9 WebM elsewhere (141 KB), H.264 as fallback (258 KB). Posters in `assets/img/hero` are each clip's first frame. Re-encode with `scripts/encode-hero.sh` (phone settings are in its header).
 - Fonts are self-hosted in `assets/fonts`: Young Serif for headings, Figtree for body text.
 - Her logo is redrawn as SVG in `assets/img/logo-*.svg` (lettering outlined, no font files). Rebuild with `scripts/build-logo.js` (fonts live in the git-ignored `generated/fonts`). Never put the signboard photo on the site or send it to Higgsfield.
