@@ -353,7 +353,7 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
   .hero .wrap { padding-block: calc(56px + var(--head-h)) 96px; }
   .hero-text { max-width: 23rem; }
   .steps-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 56px; align-items: start; }
-  .steps-layout .section-head { margin-bottom: 0; position: sticky; top: 32px; }
+  .steps-layout .section-head { margin-bottom: 0; position: sticky; top: calc(var(--head-h) + 24px); }
   .section { padding-block: 104px; }
   .reasons { grid-template-columns: 1fr 1fr; column-gap: 56px; }
   .reasons li:nth-last-child(2) { border-bottom: 1px solid var(--line); }
