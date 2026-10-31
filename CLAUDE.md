@@ -8,6 +8,7 @@ One-page preview site for Dr. Apoorva's clinic in Horamavu Agara, Bengaluru. Bui
 - Fonts are self-hosted in `assets/fonts`: Young Serif for headings, Figtree for body text.
 - Her logo is redrawn as SVG in `assets/img/logo-*.svg` (lettering outlined, no font files). Rebuild with `scripts/build-logo.js` (fonts live in the git-ignored `generated/fonts`). Never put the signboard photo on the site or send it to Higgsfield.
 - Keep paths relative, keep it static, and keep `prefers-reduced-motion` working.
+- After editing anything in `assets/js`, run `scripts/stamp-assets.sh`. It adds a content hash to the script URLs so browsers fetch the new file. Before 31 Oct 2026 the site cached `/assets` for a year without re-checking, so the bare `site.js` URL can be stale on old visitors' devices.
 
 ## Design tokens (keep new visuals inside these)
 

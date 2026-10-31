@@ -40,9 +40,23 @@
     var wanted = function () {
       return "assets/video/hero-" + (phone.matches ? "mobile" : "desktop") + (webm ? ".webm" : ".mp4");
     };
+    // If the browser refuses autoplay (iPhone Low Power Mode, data saver), the poster stays,
+    // and the first tap anywhere on the page starts the video.
+    var waitingForTap = false;
+    var onTap = function () {
+      waitingForTap = false;
+      document.removeEventListener("pointerdown", onTap);
+      document.removeEventListener("touchend", onTap);
+      if (inView) play();
+    };
     var play = function () {
       var p = video.play();
-      if (p && p.catch) p.catch(function () {}); // autoplay refused (e.g. low-power mode): poster stays
+      if (p && p.catch) p.catch(function () {
+        if (waitingForTap) return;
+        waitingForTap = true;
+        document.addEventListener("pointerdown", onTap, { passive: true });
+        document.addEventListener("touchend", onTap, { passive: true });
+      });
     };
     var useSource = function () {
       var src = wanted();
