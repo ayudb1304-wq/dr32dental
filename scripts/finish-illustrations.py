@@ -135,6 +135,7 @@ def main():
         img = finish(src)
         dst = OUT / f"{slug}.webp"
         q = save_webp(img, dst)
+        img.resize((240, 240), Image.LANCZOS).save(OUT / f"{slug}-240.webp", "WEBP", quality=84, method=6)  # for 84-104px tiles
         print(f"{slug:22s} q={q} {dst.stat().st_size / 1000:.1f} KB")
         before = Image.open(src).convert("RGB").resize((300, 300), Image.LANCZOS)
         tiles.append((before, img.resize((300, 300), Image.LANCZOS)))
