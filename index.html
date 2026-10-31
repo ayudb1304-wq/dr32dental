@@ -253,14 +253,6 @@ p { margin: 0; }
 .hero-media img, .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 0; }
 .hero-video { opacity: 0; transition: opacity 1.2s ease; }
 .hero-video.is-playing { opacity: 1; }
-/* Pause / play control for the looping video (also how reduced-motion visitors can opt in). */
-.hero-toggle { position: absolute; z-index: 3; top: calc(var(--head-h) + 14px); right: max(16px, env(safe-area-inset-right, 0px)); width: 42px; height: 42px; padding: 0;
-  display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(30,74,66,.2); color: var(--eucalyptus); cursor: pointer;
-  background: rgba(244,247,245,.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
-.hero-toggle[hidden] { display: none; }
-.hero-toggle svg { width: 16px; height: 16px; fill: currentColor; }
-.hero-toggle .i-play, .hero-toggle[data-state="paused"] .i-pause { display: none; }
-.hero-toggle[data-state="paused"] .i-play { display: block; }
 /* Phones: the art sits at the top; text sits on its calm lower half, over a porcelain wash for contrast. */
 .hero-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(244,247,245,0) 34%, rgba(244,247,245,.78) 50%, rgba(244,247,245,.9) 70%, var(--porcelain) 100%); }
 .hero .wrap { padding-top: calc(var(--head-h) + var(--mh) * .44); padding-bottom: 64px; }
@@ -412,10 +404,6 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
         <source src="assets/video/hero-desktop.mp4" type="video/mp4">
       </video>
     </div>
-    <button class="hero-toggle" type="button" hidden aria-label="Play background video" data-state="paused">
-      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.2"/></svg>
-      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.6v12.8a1 1 0 0 0 1.52.85l10.4-6.4a1 1 0 0 0 0-1.7L9.52 4.75A1 1 0 0 0 8 5.6Z"/></svg>
-    </button>
     <div class="wrap">
       <div class="hero-text">
         <h1 id="hero-title" class="reveal"><span class="eyebrow">Dentist in Horamavu Agara, Bengaluru</span> <span class="line">Gentle hands.</span> <span class="line">Honest advice.</span></h1>
@@ -557,6 +545,6 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
 
 <script src="assets/js/gsap.min.js?v=28033e44" defer></script>
 <script src="assets/js/ScrollTrigger.min.js?v=ad33c2df" defer></script>
-<script src="assets/js/site.js?v=a286f11c" defer></script>
+<script src="assets/js/site.js?v=bae7c9e8" defer></script>
 </body>
 </html>
