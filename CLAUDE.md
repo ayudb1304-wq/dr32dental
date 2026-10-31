@@ -7,7 +7,7 @@ One-page preview site for Dr. Apoorva's clinic in Horamavu Agara, Bengaluru. Bui
 - Hero video lives in `assets/video` (16:9 desktop, 9:16 phone; MP4 and WebM, no audio). Posters in `assets/img/hero` are each clip's first frame. Re-encode with `scripts/encode-hero.sh`.
 - Fonts are self-hosted in `assets/fonts`: Young Serif for headings, Figtree for body text.
 - Her logo is redrawn as SVG in `assets/img/logo-*.svg` (lettering outlined, no font files). Rebuild with `scripts/build-logo.js` (fonts live in the git-ignored `generated/fonts`). Never put the signboard photo on the site or send it to Higgsfield.
-- Keep paths relative, keep it static, and keep `prefers-reduced-motion` working.
+- Keep paths relative and keep it static. Reduced motion: on 31 Oct 2026 Ayush chose to run the hero video and scroll transition even when a phone has Reduce Motion on (`reduce = false` in `assets/js/site.js`). The video's pause button is the opt-out.
 - After editing anything in `assets/js`, run `scripts/stamp-assets.sh`. It adds a content hash to the script URLs so browsers fetch the new file. Before 31 Oct 2026 the site cached `/assets` for a year without re-checking, so the bare `site.js` URL can be stale on old visitors' devices.
 
 ## Design tokens (keep new visuals inside these)

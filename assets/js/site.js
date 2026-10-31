@@ -1,7 +1,11 @@
 // Dr.32: a calm hero video (leaf shadows drifting past a faceted porcelain tooth), a floating header,
 // a hero that stays put and turns translucent as the page slides over it, and motion that answers the visitor.
 (function () {
-  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Ayush's call (31 Oct 2026): the motion runs for everyone, even with the phone's Reduce Motion setting on,
+  // because many iPhones have it on and the site looked static. The hero video's pause button is the opt-out.
+  // To honour the setting again, set reduce back to systemReduce.
+  var systemReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduce = false;
   var gsap = window.gsap;
 
   // Floating header: firmer glass once the page has moved.
@@ -44,12 +48,12 @@
     window.addEventListener("error", function (e) { log("JS error: " + e.message); });
     var scriptTag = document.querySelector('script[src*="site.js"]');
     log("script: " + (scriptTag ? scriptTag.getAttribute("src") : "?"));
-    log("reduce motion: " + reduce + "  |  gsap: " + !!gsap + "  |  ScrollTrigger: " + !!window.ScrollTrigger);
+    log("reduce motion (phone setting): " + systemReduce + " (ignored)" + "  |  gsap: " + !!gsap + "  |  ScrollTrigger: " + !!window.ScrollTrigger);
     log("viewport: " + innerWidth + "x" + innerHeight + "  |  " + navigator.userAgent);
   }
 
-  // Hero video. It plays on its own unless the visitor has asked for reduced motion; then the poster
-  // (the first frame) stays and nothing is downloaded until they press play. The cut is chosen by screen
+  // Hero video. It plays on its own (if `reduce` is ever set to true again, the poster stays and nothing
+  // is downloaded until the visitor presses play). The cut is chosen by screen
   // size (9:16 phone, 16:9 wider) and swapped if that changes, e.g. on rotation. It starts after the page
   // has loaded, plays only while the hero is on screen, and the button pauses or plays it at any time.
   var video = document.querySelector(".hero-video");
@@ -61,7 +65,7 @@
     var webm = !appleWebKit && video.canPlayType('video/webm; codecs="vp9"') === "probably";
     var inView = false;
     var userPaused = false;   // pressed pause
-    var userPlayed = false;   // pressed play (lets reduced-motion visitors opt in)
+    var userPlayed = false;   // pressed play
     var allowed = function () { return !userPaused && (!reduce || userPlayed); };
     var wanted = function () {
       return "assets/video/hero-" + (phone.matches ? "mobile" : "desktop") + (webm ? ".webm" : ".mp4");
