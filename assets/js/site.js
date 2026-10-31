@@ -1,55 +1,98 @@
-// Dr.32: one orchestrated moment (the 32-tooth chart), plus motion that answers the visitor.
+// Dr.32: a calm hero video (leaf shadows drifting past a faceted porcelain tooth), a floating header,
+// a hero that stays put and turns translucent as the page slides over it, and motion that answers the visitor.
 (function () {
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var gsap = window.gsap;
-  var teeth = Array.prototype.slice.call(document.querySelectorAll(".chart .tooth"))
-    .sort(function (a, b) { return +a.dataset.n - +b.dataset.n; });
-  var count = document.querySelector(".chart .count");
-  var gum = document.querySelector(".chart .gum");
 
-  // Hovering a tooth lights it up. Works with or without GSAP.
-  teeth.forEach(function (t) {
-    t.addEventListener("pointerenter", function () {
-      t.classList.add("lit");
-      if (gsap && !reduce) gsap.to(t, { scale: 1.22, duration: 0.2, ease: "power2.out", transformOrigin: "50% 50%" });
-    });
-    t.addEventListener("pointerleave", function () {
-      t.classList.remove("lit");
-      if (gsap && !reduce) gsap.to(t, { scale: 1, duration: 0.35, ease: "power2.out", transformOrigin: "50% 50%" });
-    });
-  });
+  // Floating header: firmer glass once the page has moved.
+  var head = document.querySelector(".site-head");
+  if (head) {
+    var onScroll = function () { head.classList.toggle("is-scrolled", window.scrollY > 8); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  // First-visit steps: the line ends at the centre of the last number, at every width.
+  var wrap = document.querySelector(".steps-wrap");
+  if (wrap) {
+    var sizeLine = function () {
+      var nums = wrap.querySelectorAll(".steps .num");
+      if (!nums.length) return;
+      var last = nums[nums.length - 1].getBoundingClientRect();
+      var box = wrap.getBoundingClientRect();
+      wrap.style.setProperty("--line-end", Math.max(0, box.bottom - (last.top + last.height / 2)) + "px");
+    };
+    sizeLine();
+    if ("ResizeObserver" in window) new ResizeObserver(sizeLine).observe(wrap);
+    else window.addEventListener("resize", sizeLine);
+  }
+
+  // Hero video. Under reduced motion it never loads: the poster (its first frame) stays.
+  // The cut is chosen by screen size (9:16 phone, 16:9 wider) and swapped if that changes,
+  // e.g. on rotation. It starts after the page has loaded and plays only while the hero is on screen.
+  var video = document.querySelector(".hero-video");
+  if (video && !reduce && "IntersectionObserver" in window) {
+    var phone = window.matchMedia("(max-width: 759px)");
+    var ua = navigator.userAgent;
+    var appleWebKit = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
+    var webm = !appleWebKit && video.canPlayType('video/webm; codecs="vp9"') === "probably";
+    var inView = false;
+    var wanted = function () {
+      return "assets/video/hero-" + (phone.matches ? "mobile" : "desktop") + (webm ? ".webm" : ".mp4");
+    };
+    var play = function () {
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {}); // autoplay refused (e.g. low-power mode): poster stays
+    };
+    var useSource = function () {
+      var src = wanted();
+      if (video.getAttribute("src") === src) return;
+      video.classList.remove("is-playing");
+      video.setAttribute("src", src);
+      if (inView) play();
+    };
+    video.addEventListener("playing", function () { video.classList.add("is-playing"); });
+    var start = function () {
+      useSource();
+      if (phone.addEventListener) phone.addEventListener("change", useSource);
+      else if (phone.addListener) phone.addListener(useSource);
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          inView = entry.isIntersecting;
+          if (inView) play(); else video.pause();
+        });
+      }, { threshold: 0.15 }).observe(video.closest(".hero") || video);
+    };
+    if (document.readyState === "complete") start();
+    else window.addEventListener("load", start, { once: true });
+  }
 
   if (!gsap || reduce) return;
 
-  // Page-load sequence: the teeth appear in the order dentists number them (1 to 32),
-  // and the counter in the middle counts along with them.
-  var tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-  tl.from(".hero .reveal", { y: 22, opacity: 0, duration: 0.8, stagger: 0.09 }, 0);
+  // Page-load: the hero text settles in.
+  gsap.from(".hero .reveal", { y: 22, opacity: 0, duration: 0.8, stagger: 0.09, ease: "power3.out" });
 
-  if (gum && gum.getTotalLength) {
-    var len = gum.getTotalLength();
-    gsap.set(gum, { strokeDasharray: len, strokeDashoffset: len });
-    tl.to(gum, { strokeDashoffset: 0, duration: 1.7, ease: "power2.inOut" }, 0.1);
-  }
-
-  var n = 0;
-  if (count) count.textContent = "0";
-  gsap.set(teeth, { opacity: 0, scale: 0.2, transformOrigin: "50% 50%" });
-  tl.to(teeth, {
-    opacity: 1,
-    scale: 1,
-    duration: 0.38,
-    ease: "back.out(2.4)",
-    stagger: {
-      each: 0.045,
-      onStart: function () { n += 1; if (count) count.textContent = String(n); }
-    }
-  }, 0.3);
-  if (count) tl.fromTo(count, { scale: 1 }, { scale: 1.08, duration: 0.18, yoyo: true, repeat: 1, transformOrigin: "50% 50%", ease: "power2.out" });
-
-  // The first-visit line fills as you scroll through the steps.
   if (window.ScrollTrigger) {
     gsap.registerPlugin(window.ScrollTrigger);
+
+    // The hero stays in place while the rest of the page floats up over it as a sheet.
+    // On tall phone heroes the pin starts once the whole hero has been seen.
+    var hero = document.querySelector(".hero");
+    if (hero) {
+      var range = {
+        trigger: hero,
+        start: function () { return hero.offsetHeight > window.innerHeight ? "bottom bottom" : "top top"; },
+        end: function () { return "+=" + Math.min(hero.offsetHeight, window.innerHeight); },
+        invalidateOnRefresh: true
+      };
+      window.ScrollTrigger.create(Object.assign({ pin: true, pinSpacing: false }, range));
+      // As it is covered, the hero turns translucent: text lifts away, the media fades and drifts at most 40px.
+      gsap.timeline({ scrollTrigger: Object.assign({ scrub: true }, range) })
+        .to(".hero-text", { opacity: 0, y: -48, ease: "none" }, 0)
+        .to(".hero-media", { opacity: 0.45, y: 40, ease: "none" }, 0);
+    }
+
+    // The first-visit line fills as you scroll through the steps.
     gsap.fromTo(".steps-wrap .progress", { scaleY: 0 }, {
       scaleY: 1, ease: "none",
       scrollTrigger: { trigger: ".steps-wrap", start: "top 75%", end: "bottom 55%", scrub: 0.6 }

@@ -3,8 +3,10 @@
 One-page preview site for Dr. Apoorva's clinic in Horamavu Agara, Bengaluru. Built by Ayush as an unpaid preview to win the project; she hasn't approved it yet, so nothing here is final.
 
 - Live: https://dr32dental.vercel.app. Every push to `main` redeploys on Vercel automatically.
-- Plain HTML/CSS/JS with no build step. `index.html` is the page. `assets/js/site.js` runs the motion (GSAP 3.12.5 and ScrollTrigger, self-hosted).
+- Plain HTML/CSS/JS with no build step. `index.html` is the page. `assets/js/site.js` runs the motion (GSAP 3.12.5 and ScrollTrigger, self-hosted): the hero video plays only while on screen, drifts at most 40px with scroll, and stays a still poster under reduced motion.
+- Hero video lives in `assets/video` (16:9 desktop, 9:16 phone; MP4 and WebM, no audio). Posters in `assets/img/hero` are each clip's first frame. Re-encode with `scripts/encode-hero.sh`.
 - Fonts are self-hosted in `assets/fonts`: Young Serif for headings, Figtree for body text.
+- Her logo is redrawn as SVG in `assets/img/logo-*.svg` (lettering outlined, no font files). Rebuild with `scripts/build-logo.js` (fonts live in the git-ignored `generated/fonts`). Never put the signboard photo on the site or send it to Higgsfield.
 - Keep paths relative, keep it static, and keep `prefers-reduced-motion` working.
 
 ## Design tokens (keep new visuals inside these)
@@ -22,14 +24,16 @@ One-page preview site for Dr. Apoorva's clinic in Horamavu Agara, Bengaluru. Bui
 | Lines | #D9E3DE |
 | Star / gold | #C98A1B |
 
-The mood is calm, clean and unhurried. The headline promise is "The dentist in Horamavu who listens before she treats."
+The mood is calm, clean and unhurried. The hero headline is "Gentle hands. Honest advice." (31 Oct 2026); the promise behind it is still "the dentist in Horamavu who listens before she treats."
 
 ## Clinic facts (do not invent others)
 
+- Doctor: Dr. Apoorva R, BDS, Fellowship in Aesthetic Dentistry (from her clinic signboard)
 - Phone and WhatsApp: +91 93801 12096
+- Email: info.dr32@gmail.com (from her clinic signboard)
 - Address: 32, Banjara Layout Main Rd, Horamavu Agara, Bengaluru 560113
 - Rated 5.0 from 43 Google reviews. Patient quotes on the page are real Google review text. Don't add or edit quotes.
-- Timings are unknown, so the page says to message on WhatsApp.
+- Timings: her Google Business Profile lists Mon to Sat 10:00 to 12:30 and 16:30 to 20:00, closed Sunday. The page still says to message on WhatsApp; add hours only after she confirms them.
 
 ## Next job: Higgsfield visuals
 
@@ -63,7 +67,14 @@ Rules:
 - Billing is pay-as-you-go. Ayush may have claimed launch discounts on one image model and two video models, so ask which ones before choosing a model.
 - Run one test image before batching. Don't retry a POST blindly after a timeout.
 
+## SEO (set up 31 Oct 2026 with OpenSEO)
+
+- Canonical, Open Graph, sitemap and robots all point at https://dr32dental.vercel.app/. Update them, plus the JSON-LD `@id`s, when a custom domain arrives.
+- JSON-LD is a Dentist + Person + WebSite graph. Don't add `aggregateRating`: Google treats a clinic's own rating markup as self-serving.
+- Google Business Profile (place ChIJEZScHQARrjsR_AT7a9Vxq3g) has no website, one photo and one category; it ranked 12th in Maps for "dentist in horamavu".
+
 ## Before launch (only after she says yes)
 
 - Remove the preview note bar at the top of `index.html`.
 - Add her real photos, timings and a custom domain.
+- Add the site URL to her Google Business Profile, plus photos and the categories Dentist and Cosmetic dentist.
